@@ -30,6 +30,7 @@ async function syncUserDocument(user) {
     userRef,
     {
       uid: user.uid,
+      user_id: user.uid,
       email: user.email || "",
       display_name: user.displayName || "",
       photo_url: user.photoURL || "",

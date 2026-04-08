@@ -3,12 +3,12 @@ import { getAuth, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "REPLACE_WITH_API_KEY",
-  authDomain: "REPLACE_WITH_PROJECT_ID.firebaseapp.com",
-  projectId: "REPLACE_WITH_PROJECT_ID",
-  storageBucket: "REPLACE_WITH_PROJECT_ID.appspot.com",
-  messagingSenderId: "REPLACE_WITH_SENDER_ID",
-  appId: "REPLACE_WITH_APP_ID"
+  apiKey: "AIzaSyDSUPyNswBLx7Yp7UXPgmO9DWFu6HSFdf4",
+  authDomain: "finance-tracker-duushgu.firebaseapp.com",
+  projectId: "finance-tracker-duushgu",
+  storageBucket: "finance-tracker-duushgu.firebasestorage.app",
+  messagingSenderId: "5968351371",
+  appId: "1:5968351371:web:7fdce24cbc0bab6b27048e"
 };
 
 const app = initializeApp(firebaseConfig);
