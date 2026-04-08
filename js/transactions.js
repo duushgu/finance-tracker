@@ -132,18 +132,16 @@ export async function initTransactionsPage() {
         if (type === "transfer") {
           const fromAccount = accountMap[transaction.from_account_id];
           const toAccount = accountMap[transaction.to_account_id];
-          const currency = fromAccount?.currency || toAccount?.currency || "EUR";
           accountText = `${fromAccount?.name || "-"} → ${toAccount?.name || "-"}`;
-          amountText = `↔ ${formatCurrency(amount, currency)}`;
+          amountText = `↔ ${formatCurrency(amount)}`;
         } else {
           const account = accountMap[transaction.account_id];
-          const currency = account?.currency || "EUR";
           accountText = account?.name || "-";
 
           if (type === "expense") {
-            amountText = `- ${formatCurrency(amount, currency)}`;
+            amountText = `- ${formatCurrency(amount)}`;
           } else {
-            amountText = `+ ${formatCurrency(amount, currency)}`;
+            amountText = `+ ${formatCurrency(amount)}`;
           }
         }
 

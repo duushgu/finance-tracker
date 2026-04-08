@@ -30,7 +30,7 @@ export async function initAccountsPage() {
         return `
           <tr>
             <td>${account.name}</td>
-            <td class="font-semibold">${formatCurrency(account.current_balance, account.currency)}</td>
+            <td class="font-semibold">${formatCurrency(account.current_balance)}</td>
           </tr>
         `;
       })
@@ -41,7 +41,6 @@ export async function initAccountsPage() {
     event.preventDefault();
 
     const name = document.getElementById("accountName").value.trim();
-    const currency = document.getElementById("accountCurrency").value;
     const initialBalance = document.getElementById("accountInitialBalance").value;
 
     if (!name) {
@@ -51,12 +50,10 @@ export async function initAccountsPage() {
 
     await createAccount(user.uid, {
       name,
-      currency,
       initial_balance: initialBalance
     });
 
     accountForm.reset();
-    document.getElementById("accountCurrency").value = "EUR";
     document.getElementById("accountInitialBalance").value = "0";
 
     showToast("Konto gespeichert.");

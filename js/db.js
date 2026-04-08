@@ -13,6 +13,9 @@ function toNumber(value) {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
+export const APP_CURRENCY_CODE = "MNT";
+export const APP_CURRENCY_SYMBOL = "₮";
+
 export function getTodayDateString() {
   return new Date().toISOString().slice(0, 10);
 }
@@ -30,12 +33,12 @@ function normalizeDate(dateStr) {
   return date.toISOString().slice(0, 10);
 }
 
-export function formatCurrency(amount, currency = "EUR") {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency,
+export function formatCurrency(amount) {
+  const formattedNumber = new Intl.NumberFormat("de-DE", {
+    minimumFractionDigits: 2,
     maximumFractionDigits: 2
   }).format(toNumber(amount));
+  return `${formattedNumber} ${APP_CURRENCY_SYMBOL}`;
 }
 
 function withId(snapshot) {
@@ -48,7 +51,7 @@ function withId(snapshot) {
 export async function createAccount(userId, payload) {
   return addDoc(collection(db, "accounts"), {
     name: payload.name.trim(),
-    currency: payload.currency || "EUR",
+    currency: APP_CURRENCY_CODE,
     initial_balance: toNumber(payload.initial_balance),
     created_at: serverTimestamp(),
     user_id: userId

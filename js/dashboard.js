@@ -46,22 +46,22 @@ function renderAccountBalances(accounts) {
         <div class="rounded-xl border border-emerald-100 bg-white/80 px-3 py-2 flex items-center justify-between">
           <div>
             <p class="font-semibold">${account.name}</p>
-            <p class="text-xs text-slate-500">${account.currency}</p>
+            <p class="text-xs text-slate-500">MNT / ₮</p>
           </div>
-          <p class="font-display font-semibold">${formatCurrency(account.current_balance, account.currency)}</p>
+          <p class="font-display font-semibold">${formatCurrency(account.current_balance)}</p>
         </div>
       `;
     })
     .join("");
 }
 
-function renderSummary(summary, currency) {
-  document.getElementById("monthIncome").textContent = formatCurrency(summary.incomeTotal, currency);
-  document.getElementById("monthExpense").textContent = formatCurrency(summary.expenseTotal, currency);
-  document.getElementById("monthNet").textContent = formatCurrency(summary.net, currency);
+function renderSummary(summary) {
+  document.getElementById("monthIncome").textContent = formatCurrency(summary.incomeTotal);
+  document.getElementById("monthExpense").textContent = formatCurrency(summary.expenseTotal);
+  document.getElementById("monthNet").textContent = formatCurrency(summary.net);
 }
 
-function renderWeekExpense(transactions, currency) {
+function renderWeekExpense(transactions) {
   const { start, end } = getWeekRange();
 
   const weekExpense = transactions
@@ -72,7 +72,7 @@ function renderWeekExpense(transactions, currency) {
     })
     .reduce((sum, item) => sum + Number(item.amount || 0), 0);
 
-  document.getElementById("weekExpense").textContent = formatCurrency(weekExpense, currency);
+  document.getElementById("weekExpense").textContent = formatCurrency(weekExpense);
 }
 
 function renderBudgetStatus(summary) {
@@ -105,7 +105,7 @@ function renderBudgetStatus(summary) {
   detail.textContent = `Ausgabenquote: ${ratioPercent}% vom Monatseinkommen`;
 }
 
-function renderFamilyGoals(transactions, categories, currency) {
+function renderFamilyGoals(transactions, categories) {
   const container = document.getElementById("goalRows");
   const monthKey = getMonthKey();
 
@@ -132,7 +132,7 @@ function renderFamilyGoals(transactions, categories, currency) {
       <div class="rounded-xl border border-emerald-100 p-3 bg-white/80">
         <div class="flex items-center justify-between gap-3">
           <p class="font-semibold">${goal.label}</p>
-          <p class="text-sm text-slate-600">${formatCurrency(spent, currency)} / ${formatCurrency(goal.target, currency)}</p>
+          <p class="text-sm text-slate-600">${formatCurrency(spent)} / ${formatCurrency(goal.target)}</p>
         </div>
         <div class="mt-2 h-2.5 w-full rounded-full bg-slate-100 overflow-hidden">
           <div class="h-full rounded-full bg-emerald-500" style="width:${progress}%"></div>
@@ -235,16 +235,14 @@ function renderRecentTransactions(recentTransactions, accounts, categories) {
       if (transaction.type === "transfer") {
         const fromAccount = accountMap[transaction.from_account_id];
         const toAccount = accountMap[transaction.to_account_id];
-        const currency = fromAccount?.currency || toAccount?.currency || "EUR";
         accountLabel = `${fromAccount?.name || "-"} → ${toAccount?.name || "-"}`;
-        amountLabel = `↔ ${formatCurrency(transaction.transfer_amount, currency)}`;
+        amountLabel = `↔ ${formatCurrency(transaction.transfer_amount)}`;
       } else {
         const account = accountMap[transaction.account_id];
-        const currency = account?.currency || "EUR";
         accountLabel = account?.name || "-";
 
         const sign = transaction.type === "expense" ? "-" : "+";
-        amountLabel = `${sign} ${formatCurrency(transaction.amount, currency)}`;
+        amountLabel = `${sign} ${formatCurrency(transaction.amount)}`;
       }
 
       return `
@@ -278,13 +276,11 @@ export async function initDashboard() {
   const expensesByCategory = groupExpensesByCategory(transactions, categories, monthKey);
   const recentTransactions = getRecentTransactions(transactions, 8);
 
-  const defaultCurrency = accounts[0]?.currency || "EUR";
-
   renderAccountBalances(accountsWithBalances);
-  renderSummary(summary, defaultCurrency);
-  renderWeekExpense(transactions, defaultCurrency);
+  renderSummary(summary);
+  renderWeekExpense(transactions);
   renderBudgetStatus(summary);
-  renderFamilyGoals(transactions, categories, defaultCurrency);
+  renderFamilyGoals(transactions, categories);
   renderExpenseChart(expensesByCategory);
   renderRecentTransactions(recentTransactions, accounts, categories);
 }
