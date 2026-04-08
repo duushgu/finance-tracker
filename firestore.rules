@@ -32,11 +32,6 @@ service cloud.firestore {
       allow read, update, delete: if signedIn() && ownsResource();
     }
 
-    match /subscriptions/{docId} {
-      allow create: if signedIn() && createsOwnResource();
-      allow read, update, delete: if signedIn() && ownsResource();
-    }
-
     match /{document=**} {
       allow read, write: if false;
     }

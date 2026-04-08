@@ -1,11 +1,9 @@
 import {
   addDoc,
   collection,
-  doc,
   getDocs,
   query,
   serverTimestamp,
-  updateDoc,
   where
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { db } from "./firebase.js";
@@ -122,30 +120,6 @@ export async function getTransactions(userId) {
 
     return (b.created_at?.seconds || 0) - (a.created_at?.seconds || 0);
   });
-}
-
-export async function createSubscription(userId, payload) {
-  return addDoc(collection(db, "subscriptions"), {
-    name: payload.name.trim(),
-    amount: Math.abs(toNumber(payload.amount)),
-    category_id: payload.category_id,
-    account_id: payload.account_id,
-    frequency: payload.frequency || "monthly",
-    next_charge_date: normalizeDate(payload.next_charge_date),
-    user_id: userId,
-    created_at: serverTimestamp()
-  });
-}
-
-export async function getSubscriptions(userId) {
-  const subscriptionQuery = query(collection(db, "subscriptions"), where("user_id", "==", userId));
-  const snapshot = await getDocs(subscriptionQuery);
-  return withId(snapshot);
-}
-
-export async function updateSubscription(subscriptionId, payload) {
-  const reference = doc(db, "subscriptions", subscriptionId);
-  await updateDoc(reference, payload);
 }
 
 export function calculateAccountBalances(accounts, transactions) {

@@ -11,7 +11,6 @@ The app is designed for GitHub Pages deployment.
 - Accounts with dynamic balance calculation
 - Transactions: expense, income, transfer
 - Categories with optional parent category
-- Subscriptions and due-charge generation
 - Dashboard with monthly totals and expenses-by-category chart (Chart.js)
 - PWA install support (manifest + service worker)
 
@@ -24,7 +23,6 @@ finance-tracker/
 ├── accounts.html
 ├── transactions.html
 ├── categories.html
-├── subscriptions.html
 ├── manifest.json
 ├── service-worker.js
 ├── css/

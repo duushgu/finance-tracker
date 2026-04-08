@@ -1,4 +1,4 @@
-const CACHE_NAME = "finance-tracker-v2";
+const CACHE_NAME = "finance-tracker-v3";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
@@ -6,7 +6,6 @@ const STATIC_ASSETS = [
   "./accounts.html",
   "./transactions.html",
   "./categories.html",
-  "./subscriptions.html",
   "./manifest.json",
   "./css/style.css",
   "./js/firebase.js",
