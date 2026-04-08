@@ -13,6 +13,7 @@ export async function initCategoriesPage() {
 
   let categories = [];
   const familyDefaults = [
+    { name: "Sonstiges", type: "expense" },
     { name: "Miete/Wohnen", type: "expense" },
     { name: "Strom/Internet/Versicherung", type: "expense" },
     { name: "Lebensmittel", type: "expense" },

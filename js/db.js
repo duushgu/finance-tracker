@@ -210,7 +210,7 @@ export function groupExpensesByCategory(transactions, categories, monthKey = get
   transactions
     .filter((item) => item.type === "expense" && (item.date || "").startsWith(monthKey))
     .forEach((item) => {
-      const categoryName = categoryMap[item.category_id] || "Uncategorized";
+      const categoryName = categoryMap[item.category_id] || "Sonstiges";
       grouped.set(categoryName, toNumber(grouped.get(categoryName)) + toNumber(item.amount));
     });
 

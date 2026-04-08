@@ -187,7 +187,7 @@ function renderRecentTransactions(recentTransactions, accounts, categories) {
           <td><span class="type-chip ${typeClass}">${typeLabel}</span></td>
           <td class="font-semibold">${amountLabel}</td>
           <td>${accountLabel}</td>
-          <td>${categoryMap[transaction.category_id]?.name || "-"}</td>
+          <td>${categoryMap[transaction.category_id]?.name || (transaction.type === "expense" ? "Sonstiges" : "-")}</td>
           <td>${transaction.note || "-"}</td>
         </tr>
       `;

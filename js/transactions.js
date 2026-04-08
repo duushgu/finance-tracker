@@ -1,5 +1,6 @@
 import { bindAuthUi, registerPwaWorker, requireAuthPage, showToast } from "./auth.js";
 import {
+  createCategory,
   createTransaction,
   formatCurrency,
   getAccounts,
@@ -8,6 +9,8 @@ import {
   getTodayDateString,
   getTransactions
 } from "./db.js";
+
+const DEFAULT_EXPENSE_CATEGORY_NAME = "Sonstiges";
 
 function toDate(dateStr) {
   return new Date(`${dateStr}T00:00:00`);
@@ -58,6 +61,16 @@ export async function initTransactionsPage() {
   let categories = [];
   let transactions = [];
   let listMode = "month";
+  let defaultExpenseCategoryId = "";
+
+  function findDefaultExpenseCategoryId(list) {
+    const match = list.find((item) => {
+      const isExpenseCategory = item.type === "expense" || item.type === "both";
+      const normalizedName = (item.name || "").trim().toLowerCase();
+      return isExpenseCategory && normalizedName === DEFAULT_EXPENSE_CATEGORY_NAME.toLowerCase();
+    });
+    return match?.id || "";
+  }
 
   function setDefaultDates() {
     const today = getTodayDateString();
@@ -85,8 +98,25 @@ export async function initTransactionsPage() {
     document.getElementById("transferFromAccount").innerHTML = accountOptions;
     document.getElementById("transferToAccount").innerHTML = accountOptions;
 
-    document.getElementById("expenseCategory").innerHTML = expenseCategoryOptions;
+    const expenseCategorySelect = document.getElementById("expenseCategory");
+    expenseCategorySelect.innerHTML = expenseCategoryOptions;
+    expenseCategorySelect.value = defaultExpenseCategoryId || expenseCategories[0]?.id || "";
     document.getElementById("incomeCategory").innerHTML = incomeCategoryOptions;
+  }
+
+  async function ensureDefaultExpenseCategory() {
+    defaultExpenseCategoryId = findDefaultExpenseCategoryId(categories);
+    if (defaultExpenseCategoryId) {
+      return;
+    }
+
+    const created = await createCategory(user.uid, {
+      name: DEFAULT_EXPENSE_CATEGORY_NAME,
+      type: "expense",
+      parent_id: ""
+    });
+    defaultExpenseCategoryId = created.id;
+    categories = await getCategories(user.uid);
   }
 
   function renderTransactionTable() {
@@ -137,7 +167,8 @@ export async function initTransactionsPage() {
           }
         }
 
-        const categoryName = categoryMap[transaction.category_id]?.name || "-";
+        const categoryName =
+          categoryMap[transaction.category_id]?.name || (transaction.type === "expense" ? DEFAULT_EXPENSE_CATEGORY_NAME : "-");
 
         return `
           <tr>
@@ -160,6 +191,7 @@ export async function initTransactionsPage() {
       getTransactions(user.uid)
     ]);
 
+    await ensureDefaultExpenseCategory();
     populateSelectOptions();
     renderTransactionTable();
   }
@@ -167,17 +199,25 @@ export async function initTransactionsPage() {
   expenseForm.addEventListener("submit", async (event) => {
     event.preventDefault();
 
+    const selectedExpenseCategory =
+      document.getElementById("expenseCategory").value || defaultExpenseCategoryId || null;
+    if (!selectedExpenseCategory) {
+      showToast("Bitte zuerst mindestens eine Ausgaben-Kategorie anlegen.");
+      return;
+    }
+
     await createTransaction(user.uid, {
       type: "expense",
       date: document.getElementById("expenseDate").value,
       amount: document.getElementById("expenseAmount").value,
-      category_id: document.getElementById("expenseCategory").value,
+      category_id: selectedExpenseCategory,
       account_id: document.getElementById("expenseAccount").value,
       note: document.getElementById("expenseNote").value
     });
 
     expenseForm.reset();
     document.getElementById("expenseDate").value = getTodayDateString();
+    document.getElementById("expenseCategory").value = defaultExpenseCategoryId || "";
     showToast("Ausgabe gespeichert.");
     await refreshData();
   });
