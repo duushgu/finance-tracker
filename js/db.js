@@ -1,9 +1,11 @@
 import {
   addDoc,
   collection,
+  doc,
   getDocs,
   query,
   serverTimestamp,
+  updateDoc,
   where
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { db } from "./firebase.js";
@@ -66,6 +68,13 @@ export async function getAccounts(userId) {
   return withId(snapshot).sort((a, b) => a.name.localeCompare(b.name));
 }
 
+export async function updateAccount(accountId, payload) {
+  return updateDoc(doc(db, "accounts", accountId), {
+    ...payload,
+    updated_at: serverTimestamp()
+  });
+}
+
 export async function createCategory(userId, payload) {
   return addDoc(collection(db, "categories"), {
     name: payload.name.trim(),
@@ -81,6 +90,13 @@ export async function getCategories(userId) {
   const snapshot = await getDocs(categoryQuery);
 
   return withId(snapshot).sort((a, b) => a.name.localeCompare(b.name));
+}
+
+export async function updateCategory(categoryId, payload) {
+  return updateDoc(doc(db, "categories", categoryId), {
+    ...payload,
+    updated_at: serverTimestamp()
+  });
 }
 
 export async function createTransaction(userId, payload) {
@@ -123,6 +139,13 @@ export async function getTransactions(userId) {
     }
 
     return (b.created_at?.seconds || 0) - (a.created_at?.seconds || 0);
+  });
+}
+
+export async function updateTransaction(transactionId, payload) {
+  return updateDoc(doc(db, "transactions", transactionId), {
+    ...payload,
+    updated_at: serverTimestamp()
   });
 }
 

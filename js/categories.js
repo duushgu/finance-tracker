@@ -1,5 +1,43 @@
 import { bindAuthUi, registerPwaWorker, requireAuthPage, showToast } from "./auth.js";
-import { createCategory, getCategories } from "./db.js";
+import { createCategory, getCategories, updateCategory } from "./db.js";
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function labelForType(type) {
+  if (type === "expense") {
+    return "Ausgabe";
+  }
+  if (type === "income") {
+    return "Einnahme";
+  }
+  return "Beides";
+}
+
+function normalizeTypeInput(value) {
+  const normalized = String(value || "").trim().toLowerCase();
+  if (!normalized) {
+    return "";
+  }
+
+  if (["ausgabe", "expense"].includes(normalized)) {
+    return "expense";
+  }
+  if (["einnahme", "income"].includes(normalized)) {
+    return "income";
+  }
+  if (["beides", "both"].includes(normalized)) {
+    return "both";
+  }
+
+  return "";
+}
 
 export async function initCategoriesPage() {
   const user = await requireAuthPage();
@@ -13,6 +51,7 @@ export async function initCategoriesPage() {
   const closeCategoryModalBtn = document.getElementById("closeCategoryModalBtn");
 
   let categories = [];
+  let isInlineSaving = false;
   const familyDefaults = [
     { name: "Sonstiges", type: "expense" },
     { name: "Miete/Wohnen", type: "expense" },
@@ -36,6 +75,10 @@ export async function initCategoriesPage() {
     categoryModal.classList.add("hidden");
   }
 
+  function getCategoryById(categoryId) {
+    return categories.find((item) => item.id === categoryId);
+  }
+
   function renderCategoryTable() {
     if (!categories.length) {
       categoriesTableBody.innerHTML =
@@ -46,9 +89,9 @@ export async function initCategoriesPage() {
     categoriesTableBody.innerHTML = categories
       .map((category) => {
         return `
-          <tr>
-            <td>${category.name}</td>
-            <td class="capitalize">${category.type === "expense" ? "Ausgabe" : category.type === "income" ? "Einnahme" : "Beides"}</td>
+          <tr data-category-id="${category.id}">
+            <td class="editable-cell" contenteditable="true" data-field="name" spellcheck="false">${escapeHtml(category.name)}</td>
+            <td class="editable-cell capitalize" contenteditable="true" data-field="type" spellcheck="false">${labelForType(category.type)}</td>
           </tr>
         `;
       })
@@ -77,6 +120,46 @@ export async function initCategoriesPage() {
     showToast("Standard-Kategorien wurden automatisch angelegt.");
   }
 
+  async function saveCellUpdate(cell) {
+    const field = cell.dataset.field;
+    const row = cell.closest("tr");
+    if (!row) {
+      return false;
+    }
+
+    const categoryId = row.dataset.categoryId;
+    const category = getCategoryById(categoryId);
+    if (!category) {
+      return false;
+    }
+
+    const currentText = cell.textContent.trim();
+    const originalText = (cell.dataset.originalValue || "").trim();
+    if (currentText === originalText) {
+      return false;
+    }
+
+    if (field === "name") {
+      const nextName = currentText.trim();
+      if (!nextName) {
+        throw new Error("Kategoriename darf nicht leer sein.");
+      }
+      await updateCategory(categoryId, { name: nextName });
+      return true;
+    }
+
+    if (field === "type") {
+      const nextType = normalizeTypeInput(currentText);
+      if (!nextType) {
+        throw new Error("Typ muss Ausgabe, Einnahme oder Beides sein.");
+      }
+      await updateCategory(categoryId, { type: nextType });
+      return true;
+    }
+
+    return false;
+  }
+
   openCategoryModalBtn.addEventListener("click", openCategoryModal);
   closeCategoryModalBtn.addEventListener("click", closeCategoryModal);
 
@@ -89,6 +172,47 @@ export async function initCategoriesPage() {
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape" && !categoryModal.classList.contains("hidden")) {
       closeCategoryModal();
+    }
+  });
+
+  categoriesTableBody.addEventListener("focusin", (event) => {
+    const cell = event.target.closest(".editable-cell");
+    if (!cell) {
+      return;
+    }
+    cell.dataset.originalValue = cell.textContent.trim();
+  });
+
+  categoriesTableBody.addEventListener("keydown", (event) => {
+    const cell = event.target.closest(".editable-cell");
+    if (!cell) {
+      return;
+    }
+
+    if (event.key === "Enter") {
+      event.preventDefault();
+      cell.blur();
+    }
+  });
+
+  categoriesTableBody.addEventListener("focusout", async (event) => {
+    const cell = event.target.closest(".editable-cell");
+    if (!cell || isInlineSaving) {
+      return;
+    }
+
+    isInlineSaving = true;
+    try {
+      const changed = await saveCellUpdate(cell);
+      if (changed) {
+        await refreshCategories();
+        showToast("Kategorie aktualisiert.");
+      }
+    } catch (error) {
+      cell.textContent = cell.dataset.originalValue || "";
+      showToast(error.message || "Aktualisierung fehlgeschlagen.");
+    } finally {
+      isInlineSaving = false;
     }
   });
 

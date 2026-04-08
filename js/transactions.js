@@ -7,10 +7,20 @@ import {
   getCategories,
   getMonthKey,
   getTodayDateString,
-  getTransactions
+  getTransactions,
+  updateTransaction
 } from "./db.js";
 
 const DEFAULT_EXPENSE_CATEGORY_NAME = "Sonstiges";
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
 
 function toDate(dateStr) {
   return new Date(`${dateStr}T00:00:00`);
@@ -35,6 +45,7 @@ function parseCompactAmountInput(rawValue) {
   const compact = String(rawValue || "")
     .trim()
     .toLowerCase()
+    .replaceAll("₮", "")
     .replace(/\s+/g, "");
 
   if (!compact) {
@@ -42,7 +53,7 @@ function parseCompactAmountInput(rawValue) {
   }
 
   const normalized = compact.replace(",", ".");
-  const match = normalized.match(/^(-?\d+(?:\.\d+)?)(k)?$/);
+  const match = normalized.match(/^([+-]?\d+(?:\.\d+)?)(k)?$/);
   if (!match) {
     return Number.NaN;
   }
@@ -53,19 +64,54 @@ function parseCompactAmountInput(rawValue) {
   }
 
   const expanded = match[2] ? base * 1000 : base;
-  return Math.round(expanded);
+  return Math.round(Math.abs(expanded));
 }
 
-function renderTypeChip(type) {
+function normalizeTransactionType(value) {
+  const normalized = String(value || "").trim().toLowerCase();
+  if (["ausgabe", "expense"].includes(normalized)) {
+    return "expense";
+  }
+  if (["einnahme", "income"].includes(normalized)) {
+    return "income";
+  }
+  if (["transfer", "übertrag", "uebertrag"].includes(normalized)) {
+    return "transfer";
+  }
+  return "";
+}
+
+function labelForType(type) {
   if (type === "expense") {
-    return '<span class="type-chip type-expense">Ausgabe</span>';
+    return "Ausgabe";
   }
-
   if (type === "income") {
-    return '<span class="type-chip type-income">Einnahme</span>';
+    return "Einnahme";
+  }
+  return "Transfer";
+}
+
+function normalizeDateInput(value) {
+  const trimmed = String(value || "").trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    return "";
   }
 
-  return '<span class="type-chip type-transfer">Transfer</span>';
+  const date = new Date(`${trimmed}T00:00:00`);
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  return date.toISOString().slice(0, 10);
+}
+
+function normalizeNameKey(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function findByName(list, value) {
+  const key = normalizeNameKey(value);
+  return list.find((item) => normalizeNameKey(item.name) === key) || null;
 }
 
 export async function initTransactionsPage() {
@@ -95,8 +141,10 @@ export async function initTransactionsPage() {
   let accounts = [];
   let categories = [];
   let transactions = [];
+  let transactionMap = new Map();
   let listMode = "month";
   let defaultExpenseCategoryId = "";
+  let isInlineSaving = false;
 
   function openModal(modal, firstFieldId) {
     modal.classList.remove("hidden");
@@ -118,7 +166,7 @@ export async function initTransactionsPage() {
   function findDefaultExpenseCategoryId(list) {
     const match = list.find((item) => {
       const isExpenseCategory = item.type === "expense" || item.type === "both";
-      const normalizedName = (item.name || "").trim().toLowerCase();
+      const normalizedName = normalizeNameKey(item.name);
       return isExpenseCategory && normalizedName === DEFAULT_EXPENSE_CATEGORY_NAME.toLowerCase();
     });
     return match?.id || "";
@@ -136,13 +184,13 @@ export async function initTransactionsPage() {
     const expenseCategories = categories.filter((item) => item.type === "expense" || item.type === "both");
     const incomeCategories = categories.filter((item) => item.type === "income" || item.type === "both");
 
-    const accountOptions = accounts.map((account) => `<option value="${account.id}">${account.name}</option>`).join("");
+    const accountOptions = accounts.map((account) => `<option value="${account.id}">${escapeHtml(account.name)}</option>`).join("");
     const expenseCategoryOptions = expenseCategories
-      .map((category) => `<option value="${category.id}">${category.name}</option>`)
+      .map((category) => `<option value="${category.id}">${escapeHtml(category.name)}</option>`)
       .join("");
     const incomeCategoryOptions = [
       '<option value="">Keine Kategorie</option>',
-      ...incomeCategories.map((category) => `<option value="${category.id}">${category.name}</option>`)
+      ...incomeCategories.map((category) => `<option value="${category.id}">${escapeHtml(category.name)}</option>`)
     ].join("");
 
     document.getElementById("expenseAccount").innerHTML = accountOptions;
@@ -174,6 +222,7 @@ export async function initTransactionsPage() {
   function renderTransactionTable() {
     const accountMap = Object.fromEntries(accounts.map((account) => [account.id, account]));
     const categoryMap = Object.fromEntries(categories.map((category) => [category.id, category]));
+    transactionMap = new Map(transactions.map((item) => [item.id, item]));
 
     const monthKey = monthFilter.value || getMonthKey();
     const filtered = transactions.filter((transaction) => (transaction.date || "").startsWith(monthKey));
@@ -200,36 +249,22 @@ export async function initTransactionsPage() {
         const type = transaction.type;
         const amount = Number(transaction.transfer_amount || transaction.amount || 0);
 
-        let amountText = "";
-        let accountText = "-";
-
-        if (type === "transfer") {
-          const fromAccount = accountMap[transaction.from_account_id];
-          const toAccount = accountMap[transaction.to_account_id];
-          accountText = `${fromAccount?.name || "-"} → ${toAccount?.name || "-"}`;
-          amountText = `↔ ${formatCurrency(amount)}`;
-        } else {
-          const account = accountMap[transaction.account_id];
-          accountText = account?.name || "-";
-
-          if (type === "expense") {
-            amountText = `- ${formatCurrency(amount)}`;
-          } else {
-            amountText = `+ ${formatCurrency(amount)}`;
-          }
-        }
+        const accountText =
+          type === "transfer"
+            ? `${accountMap[transaction.from_account_id]?.name || "-"} -> ${accountMap[transaction.to_account_id]?.name || "-"}`
+            : accountMap[transaction.account_id]?.name || "-";
 
         const categoryName =
-          categoryMap[transaction.category_id]?.name || (transaction.type === "expense" ? DEFAULT_EXPENSE_CATEGORY_NAME : "-");
+          categoryMap[transaction.category_id]?.name || (type === "expense" ? DEFAULT_EXPENSE_CATEGORY_NAME : "-");
 
         return `
-          <tr>
-            <td>${transaction.date || "-"}</td>
-            <td>${renderTypeChip(type)}</td>
-            <td class="font-semibold">${amountText}</td>
-            <td>${accountText}</td>
-            <td>${categoryName}</td>
-            <td>${transaction.note || "-"}</td>
+          <tr data-transaction-id="${transaction.id}">
+            <td class="editable-cell" contenteditable="true" data-field="date" spellcheck="false">${escapeHtml(transaction.date || "")}</td>
+            <td class="editable-cell" contenteditable="true" data-field="type" spellcheck="false">${labelForType(type)}</td>
+            <td class="editable-cell font-semibold" contenteditable="true" data-field="amount" spellcheck="false">${formatCurrency(amount)}</td>
+            <td class="editable-cell" contenteditable="true" data-field="account" spellcheck="false">${escapeHtml(accountText)}</td>
+            <td class="editable-cell" contenteditable="true" data-field="category" spellcheck="false">${escapeHtml(categoryName)}</td>
+            <td class="editable-cell" contenteditable="true" data-field="note" spellcheck="false">${escapeHtml(transaction.note || "")}</td>
           </tr>
         `;
       })
@@ -246,6 +281,187 @@ export async function initTransactionsPage() {
     await ensureDefaultExpenseCategory();
     populateSelectOptions();
     renderTransactionTable();
+  }
+
+  async function resolveCategoryIdFromText(text, transactionType) {
+    const cleaned = String(text || "").trim();
+    if (!cleaned || cleaned === "-") {
+      return transactionType === "expense" ? defaultExpenseCategoryId : null;
+    }
+
+    const existing = findByName(categories, cleaned);
+    if (existing) {
+      return existing.id;
+    }
+
+    const newType = transactionType === "income" ? "income" : "expense";
+    const created = await createCategory(user.uid, {
+      name: cleaned,
+      type: newType,
+      parent_id: ""
+    });
+    categories = await getCategories(user.uid);
+    defaultExpenseCategoryId = findDefaultExpenseCategoryId(categories) || defaultExpenseCategoryId;
+    return created.id;
+  }
+
+  function buildTypeTransitionUpdate(transaction, nextType) {
+    const amount = Number(transaction.transfer_amount || transaction.amount || 0);
+
+    if (nextType === "transfer") {
+      const fromAccountId = transaction.type === "transfer" ? transaction.from_account_id : transaction.account_id;
+      const toAccountId =
+        transaction.type === "transfer"
+          ? transaction.to_account_id
+          : accounts.find((account) => account.id !== fromAccountId)?.id;
+
+      if (!fromAccountId || !toAccountId || fromAccountId === toAccountId) {
+        throw new Error("Für Transfer werden zwei verschiedene Konten benötigt.");
+      }
+
+      return {
+        type: "transfer",
+        amount,
+        account_id: null,
+        category_id: null,
+        from_account_id: fromAccountId,
+        to_account_id: toAccountId,
+        transfer_amount: amount
+      };
+    }
+
+    let accountId = transaction.account_id;
+    if (!accountId && transaction.type === "transfer") {
+      accountId = nextType === "income" ? transaction.to_account_id : transaction.from_account_id;
+    }
+    if (!accountId) {
+      accountId = accounts[0]?.id || null;
+    }
+    if (!accountId) {
+      throw new Error("Kein Konto verfügbar.");
+    }
+
+    const nextCategoryId =
+      nextType === "expense"
+        ? transaction.type === "expense"
+          ? transaction.category_id || defaultExpenseCategoryId
+          : defaultExpenseCategoryId
+        : transaction.type === "income"
+          ? transaction.category_id || null
+          : null;
+
+    return {
+      type: nextType,
+      amount,
+      account_id: accountId,
+      category_id: nextCategoryId,
+      from_account_id: null,
+      to_account_id: null,
+      transfer_amount: null
+    };
+  }
+
+  async function saveCellUpdate(cell) {
+    const row = cell.closest("tr");
+    if (!row) {
+      return false;
+    }
+
+    const transactionId = row.dataset.transactionId;
+    const transaction = transactionMap.get(transactionId);
+    if (!transaction) {
+      return false;
+    }
+
+    const field = cell.dataset.field;
+    const currentText = cell.textContent.trim();
+    const originalText = (cell.dataset.originalValue || "").trim();
+    if (currentText === originalText) {
+      return false;
+    }
+
+    if (field === "date") {
+      const nextDate = normalizeDateInput(currentText);
+      if (!nextDate) {
+        throw new Error("Datum muss im Format JJJJ-MM-TT sein.");
+      }
+      await updateTransaction(transactionId, { date: nextDate });
+      return true;
+    }
+
+    if (field === "type") {
+      const nextType = normalizeTransactionType(currentText);
+      if (!nextType) {
+        throw new Error("Typ muss Ausgabe, Einnahme oder Transfer sein.");
+      }
+      if (nextType === transaction.type) {
+        return false;
+      }
+      const updatePayload = buildTypeTransitionUpdate(transaction, nextType);
+      await updateTransaction(transactionId, updatePayload);
+      return true;
+    }
+
+    if (field === "amount") {
+      const amount = parseCompactAmountInput(currentText);
+      if (!Number.isFinite(amount) || amount <= 0) {
+        throw new Error("Ungültiger Betrag. Beispiel: 25000 oder 25k.");
+      }
+      if (transaction.type === "transfer") {
+        await updateTransaction(transactionId, { transfer_amount: amount, amount });
+      } else {
+        await updateTransaction(transactionId, { amount });
+      }
+      return true;
+    }
+
+    if (field === "account") {
+      if (transaction.type === "transfer") {
+        const parts = currentText.split(/->|→/).map((item) => item.trim()).filter(Boolean);
+        if (parts.length !== 2) {
+          throw new Error("Bei Transfer bitte 'Von -> Auf' angeben.");
+        }
+
+        const fromAccount = findByName(accounts, parts[0]);
+        const toAccount = findByName(accounts, parts[1]);
+        if (!fromAccount || !toAccount || fromAccount.id === toAccount.id) {
+          throw new Error("Transfer benötigt zwei verschiedene, vorhandene Konten.");
+        }
+
+        await updateTransaction(transactionId, {
+          from_account_id: fromAccount.id,
+          to_account_id: toAccount.id
+        });
+        return true;
+      }
+
+      const account = findByName(accounts, currentText);
+      if (!account) {
+        throw new Error("Konto nicht gefunden.");
+      }
+      await updateTransaction(transactionId, { account_id: account.id });
+      return true;
+    }
+
+    if (field === "category") {
+      if (transaction.type === "transfer") {
+        if (currentText && currentText !== "-") {
+          throw new Error("Transfer hat keine Kategorie.");
+        }
+        return false;
+      }
+
+      const categoryId = await resolveCategoryIdFromText(currentText, transaction.type);
+      await updateTransaction(transactionId, { category_id: categoryId });
+      return true;
+    }
+
+    if (field === "note") {
+      await updateTransaction(transactionId, { note: currentText });
+      return true;
+    }
+
+    return false;
   }
 
   openExpenseModalBtn.addEventListener("click", () => openModal(expenseModal, "expenseAmount"));
@@ -267,6 +483,47 @@ export async function initTransactionsPage() {
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
       closeAllModals();
+    }
+  });
+
+  transactionTableBody.addEventListener("focusin", (event) => {
+    const cell = event.target.closest(".editable-cell");
+    if (!cell) {
+      return;
+    }
+    cell.dataset.originalValue = cell.textContent.trim();
+  });
+
+  transactionTableBody.addEventListener("keydown", (event) => {
+    const cell = event.target.closest(".editable-cell");
+    if (!cell) {
+      return;
+    }
+
+    if (event.key === "Enter") {
+      event.preventDefault();
+      cell.blur();
+    }
+  });
+
+  transactionTableBody.addEventListener("focusout", async (event) => {
+    const cell = event.target.closest(".editable-cell");
+    if (!cell || isInlineSaving) {
+      return;
+    }
+
+    isInlineSaving = true;
+    try {
+      const changed = await saveCellUpdate(cell);
+      if (changed) {
+        await refreshData();
+        showToast("Buchung aktualisiert.");
+      }
+    } catch (error) {
+      cell.textContent = cell.dataset.originalValue || "";
+      showToast(error.message || "Aktualisierung fehlgeschlagen.");
+    } finally {
+      isInlineSaving = false;
     }
   });
 
