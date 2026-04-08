@@ -180,6 +180,7 @@ export async function initTransactionsPage() {
   const openIncomeModalBtn = document.getElementById("openIncomeModalBtn");
   const openTransferModalBtn = document.getElementById("openTransferModalBtn");
   const toggleDeleteTransactionModeBtn = document.getElementById("toggleDeleteTransactionModeBtn");
+  const openQuickTransactionFabBtn = document.getElementById("openQuickTransactionFabBtn");
   const closeExpenseModalBtn = document.getElementById("closeExpenseModalBtn");
   const closeIncomeModalBtn = document.getElementById("closeIncomeModalBtn");
   const closeTransferModalBtn = document.getElementById("closeTransferModalBtn");
@@ -375,17 +376,22 @@ export async function initTransactionsPage() {
     }
 
     toggleDeleteTransactionModeBtn.classList.toggle("is-active", isDeleteMode);
+    toggleDeleteTransactionModeBtn.textContent = "DEL";
+
     if (!isDeleteMode) {
-      toggleDeleteTransactionModeBtn.textContent = "Zeile löschen";
+      toggleDeleteTransactionModeBtn.title = "Löschmodus starten";
+      toggleDeleteTransactionModeBtn.setAttribute("aria-label", "Löschmodus starten");
       return;
     }
 
     if (selectedDeleteTransactionId) {
-      toggleDeleteTransactionModeBtn.textContent = "Auswahl löschen";
+      toggleDeleteTransactionModeBtn.title = "Ausgewählte Zeile löschen";
+      toggleDeleteTransactionModeBtn.setAttribute("aria-label", "Ausgewählte Zeile löschen");
       return;
     }
 
-    toggleDeleteTransactionModeBtn.textContent = "Löschmodus beenden";
+    toggleDeleteTransactionModeBtn.title = "Löschmodus beenden";
+    toggleDeleteTransactionModeBtn.setAttribute("aria-label", "Löschmodus beenden");
   }
 
   function setDeleteMode(nextMode) {
@@ -655,6 +661,7 @@ export async function initTransactionsPage() {
   openExpenseModalBtn.addEventListener("click", () => openModal(expenseModal, "expenseAmount"));
   openIncomeModalBtn.addEventListener("click", () => openModal(incomeModal, "incomeAmount"));
   openTransferModalBtn.addEventListener("click", () => openModal(transferModal, "transferAmount"));
+  openQuickTransactionFabBtn?.addEventListener("click", () => openModal(expenseModal, "expenseAmount"));
 
   closeExpenseModalBtn.addEventListener("click", () => closeModal(expenseModal));
   closeIncomeModalBtn.addEventListener("click", () => closeModal(incomeModal));
