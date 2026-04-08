@@ -180,7 +180,6 @@ export async function initTransactionsPage() {
   const openIncomeModalBtn = document.getElementById("openIncomeModalBtn");
   const openTransferModalBtn = document.getElementById("openTransferModalBtn");
   const toggleDeleteTransactionModeBtn = document.getElementById("toggleDeleteTransactionModeBtn");
-  const openQuickTransactionFabBtn = document.getElementById("openQuickTransactionFabBtn");
   const closeExpenseModalBtn = document.getElementById("closeExpenseModalBtn");
   const closeIncomeModalBtn = document.getElementById("closeIncomeModalBtn");
   const closeTransferModalBtn = document.getElementById("closeTransferModalBtn");
@@ -661,7 +660,6 @@ export async function initTransactionsPage() {
   openExpenseModalBtn.addEventListener("click", () => openModal(expenseModal, "expenseAmount"));
   openIncomeModalBtn.addEventListener("click", () => openModal(incomeModal, "incomeAmount"));
   openTransferModalBtn.addEventListener("click", () => openModal(transferModal, "transferAmount"));
-  openQuickTransactionFabBtn?.addEventListener("click", () => openModal(expenseModal, "expenseAmount"));
 
   closeExpenseModalBtn.addEventListener("click", () => closeModal(expenseModal));
   closeIncomeModalBtn.addEventListener("click", () => closeModal(incomeModal));
