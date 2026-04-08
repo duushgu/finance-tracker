@@ -3,6 +3,7 @@ import {
   collection,
   deleteDoc,
   doc,
+  getDoc,
   getDocs,
   query,
   serverTimestamp,
@@ -178,6 +179,29 @@ export async function updateCategory(categoryId, payload) {
 
 export async function deleteCategory(categoryId) {
   return deleteDoc(doc(db, "categories", categoryId));
+}
+
+export async function hasSeenBeginnerGuide(userId) {
+  const userRef = doc(db, "users", userId);
+  const snapshot = await getDoc(userRef);
+  if (!snapshot.exists()) {
+    return false;
+  }
+
+  return Boolean(snapshot.data()?.beginner_guide_seen_at);
+}
+
+export async function markBeginnerGuideSeen(userId) {
+  const userRef = doc(db, "users", userId);
+  await setDoc(
+    userRef,
+    {
+      user_id: userId,
+      beginner_guide_seen_at: serverTimestamp(),
+      updated_at: serverTimestamp()
+    },
+    { merge: true }
+  );
 }
 
 export async function createTransaction(userId, payload) {

@@ -8,7 +8,9 @@ import {
   getMonthlySummary,
   getRecentTransactions,
   getTransactions,
-  groupExpensesByCategory
+  groupExpensesByCategory,
+  hasSeenBeginnerGuide,
+  markBeginnerGuideSeen
 } from "./db.js";
 
 let expenseChart;
@@ -285,10 +287,44 @@ function renderRecentTransactions(recentTransactions, accounts, categories) {
     .join("");
 }
 
+async function setupBeginnerGuideBanner(userId) {
+  const banner = document.getElementById("beginnerGuideBanner");
+  const dismissBtn = document.getElementById("dismissBeginnerGuideBtn");
+  if (!banner || !dismissBtn) {
+    return;
+  }
+
+  let hasSeen = true;
+  try {
+    hasSeen = await hasSeenBeginnerGuide(userId);
+  } catch (error) {
+    // If reading fails, keep the UI usable and do not block dashboard rendering.
+    hasSeen = true;
+  }
+
+  if (hasSeen) {
+    banner.classList.add("hidden");
+    return;
+  }
+
+  banner.classList.remove("hidden");
+  markBeginnerGuideSeen(userId).catch(() => {});
+
+  dismissBtn.addEventListener(
+    "click",
+    () => {
+      banner.classList.add("hidden");
+    },
+    { once: true }
+  );
+}
+
 export async function initDashboard() {
   const user = await requireAuthPage();
   bindAuthUi(user);
   registerPwaWorker();
+
+  await setupBeginnerGuideBanner(user.uid);
 
   const [accounts, categories, transactions] = await Promise.all([
     getAccounts(user.uid),

@@ -253,6 +253,20 @@ a {
   background: #f7fcfa;
 }
 
+.guide-banner {
+  border-color: #b5dfcc;
+  background: linear-gradient(135deg, rgba(222, 246, 236, 0.85) 0%, rgba(245, 252, 248, 0.95) 100%);
+}
+
+.guide-banner-kicker {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #1f6b55;
+}
+
 .toast {
   position: fixed;
   bottom: 5.25rem;
@@ -489,6 +503,15 @@ a {
     border-color: #355061;
     background: #152535;
     color: #b5cbd6;
+  }
+
+  .guide-banner {
+    border-color: #355061;
+    background: linear-gradient(135deg, rgba(20, 49, 66, 0.92) 0%, rgba(16, 31, 43, 0.95) 100%);
+  }
+
+  .guide-banner-kicker {
+    color: #89d7b5;
   }
 
   .toast {
