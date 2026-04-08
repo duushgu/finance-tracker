@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Finance Tracker | Categories</title>
+    <meta name="theme-color" content="#0f8f67" />
+    <link rel="manifest" href="./manifest.json" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Sora:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="./css/style.css" />
+  </head>
+  <body class="antialiased">
+    <div class="min-h-screen lg:flex">
+      <aside class="hidden lg:flex lg:w-72 xl:w-80 p-5">
+        <div class="card w-full p-5 flex flex-col gap-6">
+          <header>
+            <p class="text-xs uppercase tracking-[0.2em] text-slate-500">Family Workspace</p>
+            <h1 class="font-display text-2xl font-semibold">Finance Tracker</h1>
+          </header>
+          <nav class="space-y-2">
+            <a class="sidebar-link" href="./dashboard.html">Dashboard</a>
+            <a class="sidebar-link" href="./accounts.html">Accounts</a>
+            <a class="sidebar-link" href="./transactions.html">Transactions</a>
+            <a class="sidebar-link active" href="./categories.html">Categories</a>
+            <a class="sidebar-link" href="./subscriptions.html">Subscriptions</a>
+          </nav>
+          <div class="mt-auto space-y-3">
+            <p id="currentUserEmail" class="text-xs text-slate-500 break-all"></p>
+            <button id="logoutBtn" class="btn btn-neutral w-full">Sign out</button>
+          </div>
+        </div>
+      </aside>
+
+      <main class="flex-1 page-main p-4 lg:p-8 space-y-6">
+        <header class="card p-5">
+          <p class="text-sm text-slate-500">Categories</p>
+          <h2 class="font-display text-2xl font-semibold">Create and Organize Categories</h2>
+        </header>
+
+        <section class="card p-5">
+          <h3 class="font-display text-lg font-semibold mb-4">Add Category</h3>
+          <form id="categoryForm" class="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <label class="space-y-1">
+              <span class="text-sm font-semibold">Name</span>
+              <input id="categoryName" class="form-input" required placeholder="Food" />
+            </label>
+            <label class="space-y-1">
+              <span class="text-sm font-semibold">Type</span>
+              <select id="categoryType" class="form-select" required>
+                <option value="expense">Expense</option>
+                <option value="income">Income</option>
+                <option value="both">Both</option>
+              </select>
+            </label>
+            <label class="space-y-1">
+              <span class="text-sm font-semibold">Parent Category (optional)</span>
+              <select id="categoryParent" class="form-select"></select>
+            </label>
+            <div class="flex items-end">
+              <button class="btn btn-primary w-full" type="submit">+ Add Category</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="card p-5">
+          <header class="mb-3">
+            <h3 class="font-display text-lg font-semibold">Category List</h3>
+          </header>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Type</th>
+                  <th>Parent</th>
+                </tr>
+              </thead>
+              <tbody id="categoriesTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <nav class="lg:hidden fixed bottom-0 inset-x-0 z-40 border-t border-emerald-100 bg-white/95 backdrop-blur">
+      <div class="max-w-md mx-auto grid grid-cols-5 px-2 py-2 gap-1">
+        <a href="./dashboard.html" class="mobile-link">Home</a>
+        <a href="./transactions.html" class="mobile-link">Txns</a>
+        <a href="./accounts.html" class="mobile-link">Accounts</a>
+        <a href="./categories.html" class="mobile-link active">Categories</a>
+        <a href="./subscriptions.html" class="mobile-link">Subs</a>
+      </div>
+    </nav>
+
+    <script type="module">
+      import { initCategoriesPage } from "./js/categories.js";
+      initCategoriesPage();
+    </script>
+  </body>
+</html>

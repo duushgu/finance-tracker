@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Finance Tracker | Login</title>
+    <meta name="theme-color" content="#0f8f67" />
+    <link rel="manifest" href="./manifest.json" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Sora:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                50: "#edf9f3",
+                100: "#d6efe4",
+                500: "#0f8f67",
+                700: "#0a7351"
+              }
+            }
+          }
+        }
+      };
+    </script>
+    <link rel="stylesheet" href="./css/style.css" />
+  </head>
+  <body class="antialiased">
+    <main class="min-h-screen flex items-center justify-center p-4">
+      <section class="card w-full max-w-md p-7 space-y-6">
+        <header class="space-y-2 text-center">
+          <p class="text-xs uppercase tracking-[0.2em] text-slate-500">Family Finance Workspace</p>
+          <h1 class="font-display text-3xl font-semibold text-slate-900">Finance Tracker</h1>
+          <p class="text-sm text-slate-600">
+            Sign in with Google to manage accounts, transactions, subscriptions and monthly summaries.
+          </p>
+        </header>
+
+        <button id="googleLoginBtn" class="btn btn-primary w-full">
+          <span>Sign in with Google</span>
+        </button>
+
+        <p id="loginStatus" class="text-sm text-slate-600 text-center"></p>
+
+        <details class="rounded-xl bg-amber-50 border border-amber-200 p-3">
+          <summary class="cursor-pointer font-semibold text-amber-800">First setup checklist</summary>
+          <ul class="mt-2 text-sm text-amber-900 list-disc pl-4 space-y-1">
+            <li>Enable Google Authentication in Firebase Console.</li>
+            <li>Create a Firestore database in production or test mode.</li>
+            <li>Replace Firebase config placeholders in <code>js/firebase.js</code>.</li>
+          </ul>
+        </details>
+      </section>
+    </main>
+
+    <script type="module">
+      import { setupLoginPage, registerPwaWorker } from "./js/auth.js";
+      setupLoginPage();
+      registerPwaWorker();
+    </script>
+  </body>
+</html>

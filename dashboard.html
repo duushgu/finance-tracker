@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Finance Tracker | Dashboard</title>
+    <meta name="theme-color" content="#0f8f67" />
+    <link rel="manifest" href="./manifest.json" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Sora:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="./css/style.css" />
+  </head>
+  <body class="antialiased">
+    <div class="min-h-screen lg:flex">
+      <aside class="hidden lg:flex lg:w-72 xl:w-80 p-5">
+        <div class="card w-full p-5 flex flex-col gap-6">
+          <header>
+            <p class="text-xs uppercase tracking-[0.2em] text-slate-500">Family Workspace</p>
+            <h1 class="font-display text-2xl font-semibold">Finance Tracker</h1>
+          </header>
+          <nav class="space-y-2">
+            <a class="sidebar-link active" href="./dashboard.html">Dashboard</a>
+            <a class="sidebar-link" href="./accounts.html">Accounts</a>
+            <a class="sidebar-link" href="./transactions.html">Transactions</a>
+            <a class="sidebar-link" href="./categories.html">Categories</a>
+            <a class="sidebar-link" href="./subscriptions.html">Subscriptions</a>
+          </nav>
+          <div class="mt-auto space-y-3">
+            <p id="currentUserEmail" class="text-xs text-slate-500 break-all"></p>
+            <button id="logoutBtn" class="btn btn-neutral w-full">Sign out</button>
+          </div>
+        </div>
+      </aside>
+
+      <main class="flex-1 page-main p-4 lg:p-8 space-y-6">
+        <header class="card p-5 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p class="text-sm text-slate-500">Overview</p>
+            <h2 class="font-display text-2xl font-semibold">This Month Summary</h2>
+          </div>
+          <a href="./transactions.html" class="btn btn-primary">+ Add Transaction</a>
+        </header>
+
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <article class="card p-4">
+            <p class="card-title">Income</p>
+            <p id="monthIncome" class="stat-value text-emerald-700">€0.00</p>
+          </article>
+          <article class="card p-4">
+            <p class="card-title">Expenses</p>
+            <p id="monthExpense" class="stat-value text-rose-700">€0.00</p>
+          </article>
+          <article class="card p-4">
+            <p class="card-title">Net</p>
+            <p id="monthNet" class="stat-value text-slate-900">€0.00</p>
+          </article>
+        </section>
+
+        <section class="grid grid-cols-1 xl:grid-cols-2 gap-5">
+          <article class="card p-5">
+            <header class="mb-3 flex items-center justify-between">
+              <h3 class="font-display text-lg font-semibold">Account Balances</h3>
+              <a class="text-sm font-semibold text-emerald-700" href="./accounts.html">Manage</a>
+            </header>
+            <div id="dashboardAccountBalances" class="space-y-2"></div>
+          </article>
+
+          <article class="card p-5">
+            <header class="mb-4">
+              <h3 class="font-display text-lg font-semibold">Expenses by Category</h3>
+              <p class="text-sm text-slate-500">Current month breakdown</p>
+            </header>
+            <div class="h-72">
+              <canvas id="expenseChart"></canvas>
+            </div>
+          </article>
+        </section>
+
+        <section class="card p-5">
+          <header class="mb-3 flex items-center justify-between gap-2">
+            <h3 class="font-display text-lg font-semibold">Recent Transactions</h3>
+            <a class="text-sm font-semibold text-emerald-700" href="./transactions.html">Open all</a>
+          </header>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Type</th>
+                  <th>Amount</th>
+                  <th>Account</th>
+                  <th>Category</th>
+                  <th>Note</th>
+                </tr>
+              </thead>
+              <tbody id="recentTransactionsBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <nav class="lg:hidden fixed bottom-0 inset-x-0 z-40 border-t border-emerald-100 bg-white/95 backdrop-blur">
+      <div class="max-w-md mx-auto grid grid-cols-5 px-2 py-2 gap-1">
+        <a href="./dashboard.html" class="mobile-link active">Home</a>
+        <a href="./transactions.html" class="mobile-link">Txns</a>
+        <a href="./accounts.html" class="mobile-link">Accounts</a>
+        <a href="./categories.html" class="mobile-link">Categories</a>
+        <a href="./subscriptions.html" class="mobile-link">Subs</a>
+      </div>
+    </nav>
+
+    <script type="module">
+      import { initDashboard } from "./js/dashboard.js";
+      initDashboard();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,25 @@
+{
+  "name": "Finance Tracker",
+  "short_name": "Finance",
+  "description": "Static finance tracker with Firebase Auth + Firestore",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f5fbf8",
+  "theme_color": "#0f8f67",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "./assets/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "./assets/icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}
