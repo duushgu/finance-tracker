@@ -21,7 +21,7 @@ export async function initAccountsPage() {
 
     if (!accountsWithBalance.length) {
       accountsTableBody.innerHTML =
-        '<tr><td colspan="4"><div class="empty-state">Noch kein Konto vorhanden. Bitte zuerst ein Konto anlegen.</div></td></tr>';
+        '<tr><td colspan="2"><div class="empty-state">Noch kein Konto vorhanden. Bitte zuerst ein Konto anlegen.</div></td></tr>';
       return;
     }
 
@@ -30,8 +30,6 @@ export async function initAccountsPage() {
         return `
           <tr>
             <td>${account.name}</td>
-            <td>${account.currency}</td>
-            <td>${formatCurrency(account.initial_balance, account.currency)}</td>
             <td class="font-semibold">${formatCurrency(account.current_balance, account.currency)}</td>
           </tr>
         `;
