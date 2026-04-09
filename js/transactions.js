@@ -891,12 +891,12 @@ export async function initTransactionsPage() {
     renderTransactionTable();
   });
 
-  filterThisWeek.addEventListener("click", () => {
+  filterThisWeek?.addEventListener("click", () => {
     listMode = "week";
     renderTransactionTable();
   });
 
-  filterThisMonth.addEventListener("click", () => {
+  filterThisMonth?.addEventListener("click", () => {
     listMode = "month";
     renderTransactionTable();
   });
