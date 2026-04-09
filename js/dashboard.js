@@ -307,11 +307,14 @@ async function setupBeginnerGuideBanner(userId) {
   }
 
   banner.classList.remove("hidden");
-  markBeginnerGuideSeen(userId).catch(() => {});
-
   dismissBtn.addEventListener(
     "click",
-    () => {
+    async () => {
+      try {
+        await markBeginnerGuideSeen(userId);
+      } catch (error) {
+        // Ignore write failures; user can still continue using the app.
+      }
       banner.classList.add("hidden");
     },
     { once: true }
