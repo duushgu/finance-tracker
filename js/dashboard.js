@@ -119,7 +119,6 @@ function renderAccountBalances(accounts) {
         <div class="rounded-xl border border-emerald-100 bg-white/80 px-3 py-2 flex items-center justify-between">
           <div>
             <p class="font-semibold">${account.name}</p>
-            <p class="text-xs text-slate-500">MNT / ₮</p>
           </div>
           <p class="font-display font-semibold">${formatCurrency(account.current_balance)}</p>
         </div>
