@@ -247,9 +247,7 @@ export async function initDashboard() {
   const expenseModal = document.getElementById("expenseModal");
   const incomeModal = document.getElementById("incomeModal");
   const transferModal = document.getElementById("transferModal");
-  const dashboardTransactionsControls = document.getElementById("dashboardTransactionsControls");
   const dashboardTransactionsMonthFilter = document.getElementById("dashboardTransactionsMonthFilter");
-  const showDetailedTransactionsBtn = document.getElementById("showDetailedTransactionsBtn");
   const recentTransactionsBody = document.getElementById("recentTransactionsBody");
 
   const expenseForm = document.getElementById("expenseForm");
@@ -267,7 +265,6 @@ export async function initDashboard() {
   let categories = [];
   let transactions = [];
   let defaultExpenseCategoryId = "";
-  let detailedTransactionsEnabled = false;
 
   function openModal(modal, firstFieldId) {
     if (!modal) {
@@ -351,15 +348,7 @@ export async function initDashboard() {
     document.getElementById("incomeCategory").innerHTML = incomeCategoryOptions;
   }
 
-  function updateTransactionsUiState() {
-    dashboardTransactionsControls.classList.toggle("hidden", !detailedTransactionsEnabled);
-  }
-
   function getDisplayedTransactions() {
-    if (!detailedTransactionsEnabled) {
-      return transactions.slice(0, 5);
-    }
-
     const monthKey = dashboardTransactionsMonthFilter.value || getMonthKey();
     return transactions.filter((transaction) => (transaction.date || "").startsWith(monthKey));
   }
@@ -370,9 +359,7 @@ export async function initDashboard() {
     const rows = getDisplayedTransactions();
 
     if (!rows.length) {
-      recentTransactionsBody.innerHTML = `<tr><td colspan="6"><div class="empty-state">${
-        detailedTransactionsEnabled ? "Энэ сард гүйлгээ алга." : "Гүйлгээ хараахан алга."
-      }</div></td></tr>`;
+      recentTransactionsBody.innerHTML = '<tr><td colspan="6"><div class="empty-state">Энэ сард гүйлгээ алга.</div></td></tr>';
       return;
     }
 
@@ -437,7 +424,6 @@ export async function initDashboard() {
     renderSummary(summary);
     renderBudgetStatus(summary);
     renderExpenseChart(expensesByCategory);
-    updateTransactionsUiState();
     renderTransactionsTable();
   }
 
@@ -519,18 +505,7 @@ export async function initDashboard() {
     openModal(transferModal, "transferAmount");
   });
 
-  showDetailedTransactionsBtn?.addEventListener("click", () => {
-    detailedTransactionsEnabled = true;
-    if (!dashboardTransactionsMonthFilter.value) {
-      dashboardTransactionsMonthFilter.value = getMonthKey();
-    }
-    updateTransactionsUiState();
-    renderTransactionsTable();
-  });
-
   dashboardTransactionsMonthFilter?.addEventListener("change", () => {
-    detailedTransactionsEnabled = true;
-    updateTransactionsUiState();
     renderTransactionsTable();
   });
 
